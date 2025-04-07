@@ -1,120 +1,63 @@
 # JUSTupload
-import yfinance as yf
 
-# ========== 估價模型 ==========
 
-def valuation_tool(
-    revenue, revenue_growth_rate, ps_ratio,
-    net_income, net_income_growth_rate, pe_ratio,
-    eps, eps_growth_rate,
-    shares_outstanding,
-    fcf, fcf_growth_rate, discount_rate, terminal_growth_rate,
-    years=5
-):
-    # PS Model (營收推估)
-    future_revenue = revenue * (1 + revenue_growth_rate) ** years
-    ps_valuation = (future_revenue * ps_ratio) / (shares_outstanding * 1e8)
+ticker = yf.Ticker("AAPL")
+cashflow_statement = ticker.cashflow
 
-    # PE Model (淨利推估)
-    future_net_income = net_income * (1 + net_income_growth_rate) ** years
-    pe_valuation = (future_net_income * pe_ratio) / (shares_outstanding * 1e8)
 
-    # EPS Model (EPS推估)
-    future_eps = eps * (1 + eps_growth_rate) ** years
-    eps_valuation = future_eps * pe_ratio
-
-    # DCF Model (自由現金流折現推估)
-    discounted_cash_flows = 0
-    current_fcf = fcf
-
-    for year in range(1, years + 1):
-        current_fcf *= (1 + fcf_growth_rate)
-        discounted_fcf = current_fcf / ((1 + discount_rate) ** year)
-        discounted_cash_flows += discounted_fcf
-
-    # Terminal Value
-    terminal_value = current_fcf * (1 + terminal_growth_rate) / (discount_rate - terminal_growth_rate)
-    discounted_terminal_value = terminal_value / ((1 + discount_rate) ** years)
-
-    # Enterprise Value
-    enterprise_value = discounted_cash_flows + discounted_terminal_value
-    dcf_valuation = enterprise_value / (shares_outstanding * 1e8)
-
-    return {
-        "PS模型股價推估": round(ps_valuation, 2),
-        "PE模型股價推估": round(pe_valuation, 2),
-        "EPS模型股價推估": round(eps_valuation, 2),
-        "DCF模型股價推估": round(dcf_valuation, 2),
-    }
-
-# ========== 自動抓資料 + 估價主程式 ==========
-
-def auto_valuation(symbol):
-    ticker = yf.Ticker(symbol)
-
-    # 抓營收與淨利
-    income_statement = ticker.financials
-    revenue = income_statement.loc["Total Revenue"].iloc[0] / 1e8  # 億美元
-    net_income = income_statement.loc["Net Income"].iloc[0] / 1e8  # 億美元
-
-    # 抓現金流表，自由現金流 (Operating Cash Flow - Capital Expenditures)
-    cashflow_statement = ticker.cashflow
-    operating_cash_flow = cashflow_statement.loc["Total Cash From Operating Activities"].iloc[0]
-    capital_expenditures = cashflow_statement.loc["Capital Expenditures"].iloc[0]
-    fcf = (operating_cash_flow + capital_expenditures) / 1e8  # 億美元（注意CapEx是負數）
-
-    # 抓EPS
-    eps = ticker.info['trailingEps']
-
-    # 抓流通股數
-    shares_outstanding = ticker.info['sharesOutstanding'] / 1e8  # 億股
-
-    # 抓現價
-    current_price = ticker.info['currentPrice']
-
-    # 顯示基礎資料
-    print(f"\n--- {symbol} 基礎財報資料 ---")
-    print(f"營收: {revenue:.2f} 億美元")
-    print(f"淨利: {net_income:.2f} 億美元")
-    print(f"自由現金流(FCF): {fcf:.2f} 億美元")
-    print(f"每股盈餘(EPS): {eps:.2f}")
-    print(f"流通股數: {shares_outstanding:.2f} 億股")
-    print(f"現價: {current_price} 美元")
-
-    # 設定估價參數
-    revenue_growth_rate = 0.05
-    ps_ratio = 6
-    net_income_growth_rate = 0.05
-    pe_ratio = 25
-    eps_growth_rate = 0.05
-    fcf_growth_rate = 0.08
-    discount_rate = 0.10
-    terminal_growth_rate = 0.02
-    years = 5
-
-    # 開始估價
-    result = valuation_tool(
-        revenue=revenue,
-        revenue_growth_rate=revenue_growth_rate,
-        ps_ratio=ps_ratio,
-        net_income=net_income,
-        net_income_growth_rate=net_income_growth_rate,
-        pe_ratio=pe_ratio,
-        eps=eps,
-        eps_growth_rate=eps_growth_rate,
-        shares_outstanding=shares_outstanding,
-        fcf=fcf,
-        fcf_growth_rate=fcf_growth_rate,
-        discount_rate=discount_rate,
-        terminal_growth_rate=terminal_growth_rate,
-        years=years
-    )
-
-    print(f"\n--- {symbol} 多角度推估股價 ---")
-    for method, price in result.items():
-        print(f"{method}：{price} 美元")
-
-# ========== 執行 ==========
-
-# 直接輸入想估的股票代號
-auto_valuation("AAPL")
+	2024-09-30	2023-09-30	2022-09-30	2021-09-30	2020-09-30
+Free Cash Flow	108807000000.0	99584000000.0	111443000000.0	92953000000.0	NaN
+Repurchase Of Capital Stock	-94949000000.0	-77550000000.0	-89402000000.0	-85971000000.0	NaN
+Repayment Of Debt	-9958000000.0	-11151000000.0	-9543000000.0	-8750000000.0	NaN
+Issuance Of Debt	0.0	5228000000.0	5465000000.0	20393000000.0	NaN
+Issuance Of Capital Stock	NaN	NaN	NaN	1105000000.0	880000000.0
+Capital Expenditure	-9447000000.0	-10959000000.0	-10708000000.0	-11085000000.0	NaN
+Interest Paid Supplemental Data	NaN	3803000000.0	2865000000.0	2687000000.0	3002000000.0
+Income Tax Paid Supplemental Data	26102000000.0	18679000000.0	19573000000.0	25385000000.0	NaN
+End Cash Position	29943000000.0	30737000000.0	24977000000.0	35929000000.0	NaN
+Beginning Cash Position	30737000000.0	24977000000.0	35929000000.0	39789000000.0	NaN
+Changes In Cash	-794000000.0	5760000000.0	-10952000000.0	-3860000000.0	NaN
+Financing Cash Flow	-121983000000.0	-108488000000.0	-110749000000.0	-93353000000.0	NaN
+Cash Flow From Continuing Financing Activities	-121983000000.0	-108488000000.0	-110749000000.0	-93353000000.0	NaN
+Net Other Financing Charges	-5802000000.0	-6012000000.0	-6383000000.0	-5580000000.0	NaN
+Cash Dividends Paid	-15234000000.0	-15025000000.0	-14841000000.0	-14467000000.0	NaN
+Common Stock Dividend Paid	-15234000000.0	-15025000000.0	-14841000000.0	-14467000000.0	NaN
+Net Common Stock Issuance	-94949000000.0	-77550000000.0	-89402000000.0	-85971000000.0	NaN
+Common Stock Payments	-94949000000.0	-77550000000.0	-89402000000.0	-85971000000.0	NaN
+Common Stock Issuance	NaN	NaN	NaN	1105000000.0	880000000.0
+Net Issuance Payments Of Debt	-5998000000.0	-9901000000.0	-123000000.0	12665000000.0	NaN
+Net Short Term Debt Issuance	3960000000.0	-3978000000.0	3955000000.0	1022000000.0	NaN
+Net Long Term Debt Issuance	-9958000000.0	-5923000000.0	-4078000000.0	11643000000.0	NaN
+Long Term Debt Payments	-9958000000.0	-11151000000.0	-9543000000.0	-8750000000.0	NaN
+Long Term Debt Issuance	0.0	5228000000.0	5465000000.0	20393000000.0	NaN
+Investing Cash Flow	2935000000.0	3705000000.0	-22354000000.0	-14545000000.0	NaN
+Cash Flow From Continuing Investing Activities	2935000000.0	3705000000.0	-22354000000.0	-14545000000.0	NaN
+Net Other Investing Changes	-1308000000.0	-1337000000.0	-2086000000.0	-385000000.0	NaN
+Net Investment Purchase And Sale	13690000000.0	16001000000.0	-9560000000.0	-3075000000.0	NaN
+Sale Of Investment	62346000000.0	45514000000.0	67363000000.0	106483000000.0	NaN
+Purchase Of Investment	-48656000000.0	-29513000000.0	-76923000000.0	-109558000000.0	NaN
+Net Business Purchase And Sale	NaN	NaN	-306000000.0	-33000000.0	-1524000000.0
+Purchase Of Business	NaN	NaN	-306000000.0	-33000000.0	-1524000000.0
+Net PPE Purchase And Sale	-9447000000.0	-10959000000.0	-10708000000.0	-11085000000.0	NaN
+Purchase Of PPE	-9447000000.0	-10959000000.0	-10708000000.0	-11085000000.0	NaN
+Operating Cash Flow	118254000000.0	110543000000.0	122151000000.0	104038000000.0	NaN
+Cash Flow From Continuing Operating Activities	118254000000.0	110543000000.0	122151000000.0	104038000000.0	NaN
+Change In Working Capital	3651000000.0	-6577000000.0	1200000000.0	-4911000000.0	NaN
+Change In Other Working Capital	NaN	NaN	478000000.0	1676000000.0	2081000000.0
+Change In Other Current Liabilities	15552000000.0	3031000000.0	6110000000.0	7475000000.0	NaN
+Change In Other Current Assets	-11731000000.0	-5684000000.0	-6499000000.0	-8042000000.0	NaN
+Change In Payables And Accrued Expense	6020000000.0	-1889000000.0	9448000000.0	12326000000.0	NaN
+Change In Payable	6020000000.0	-1889000000.0	9448000000.0	12326000000.0	NaN
+Change In Account Payable	6020000000.0	-1889000000.0	9448000000.0	12326000000.0	NaN
+Change In Inventory	-1046000000.0	-1618000000.0	1484000000.0	-2642000000.0	NaN
+Change In Receivables	-5144000000.0	-417000000.0	-9343000000.0	-14028000000.0	NaN
+Changes In Account Receivables	-3788000000.0	-1688000000.0	-1823000000.0	-10125000000.0	NaN
+Other Non Cash Items	-2266000000.0	-2227000000.0	1006000000.0	-4921000000.0	NaN
+Stock Based Compensation	11688000000.0	10833000000.0	9038000000.0	7906000000.0	NaN
+Deferred Tax	NaN	NaN	895000000.0	-4774000000.0	-215000000.0
+Deferred Income Tax	NaN	NaN	895000000.0	-4774000000.0	-215000000.0
+Depreciation Amortization Depletion	11445000000.0	11519000000.0	11104000000.0	11284000000.0	NaN
+Depreciation And Amortization	11445000000.0	11519000000.0	11104000000.0	11284000000.0	NaN
+Net Income From Continuing Operations	93736000000.0	96995000000.0	99803000000.0	94680000000.0	NaN
+1
+cash_flow裡有: Free Cash Flow  還需要計算: fcf = (operating_cash_flow + capital_expenditures) / 1e8 嗎?

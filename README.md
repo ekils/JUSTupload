@@ -1,6 +1,6 @@
 # JUSTupload
 
-
+fcf:
 ['date',
  'symbol',
  'calendarYear',
@@ -34,8 +34,8 @@
  'growthCashAtBeginningOfPeriod',
  'growthOperatingCashFlow',
  'growthCapitalExpenditure',
- 'growthFreeCashFlow']
-balance sheet 
+ 'growthFreeCashFlow']  
+balance sheet :
 ['date',
  'symbol',
  'calendarYear',
@@ -79,7 +79,7 @@ balance sheet
  'growthTotalInvestments',
  'growthTotalDebt',
  'growthNetDebt']
-income
+income:
 ['date',
  'symbol',
  'calendarYear',
@@ -110,7 +110,7 @@ income
  'growthEPSDiluted',
  'growthWeightedAverageShsOut',
  'growthWeightedAverageShsOutDil']
-financial 
+financial :
 ['symbol',
  'date',
  'calendarYear',
